@@ -180,9 +180,21 @@ console.log('## qq-bridge 语音系统：控制台与 preset');
 
 console.log('## 文档');
 {
-  const voice = read(path.join('docs', 'guides', 'VOICE.md'));
-  for (const needle of ['图形界面', 'voice-gui.mjs', 'voice-cli.mjs', '默认是关的', '发语音-图形界面.cmd']) {
-    ok(voice.includes(needle), 'docs/guides/VOICE.md 提到「' + needle + '」');
+  // docs/guides/VOICE.md **不在公开仓库里**（docs/FOLDER_MAP.md §三：它与
+  // PROJECT_GUIDE.md 一样被 .gitignore 排除——里面含本机真实路径）。公开 clone 上
+  // 没有这个文件，这里必须显式跳过而不是 readFileSync 直接 ENOENT 崩溃：
+  // 否则任何照 README 克隆仓库的人跑 npm run test:audit 都会在最后一段崩掉。
+  // 注意：这是**跳过，不是通过** —— 只有本机那份文档存在时才真正覆盖到这几条断言。
+  const voiceRel = path.join('docs', 'guides', 'VOICE.md');
+  if (!exists(voiceRel)) {
+    console.log('  ⏭  跳过：docs/guides/VOICE.md 的内容断言（图形界面 / voice-gui.mjs / voice-cli.mjs / 默认是关的 / 发语音-图形界面.cmd）');
+    console.log('     原因：该文档不在公开仓库里（被 .gitignore 排除，见 docs/FOLDER_MAP.md），只在本机可见。');
+    console.log('     注意：这是**跳过，不是通过** —— 这台机器上没有覆盖到这部分。');
+  } else {
+    const voice = read(voiceRel);
+    for (const needle of ['图形界面', 'voice-gui.mjs', 'voice-cli.mjs', '默认是关的', '发语音-图形界面.cmd']) {
+      ok(voice.includes(needle), 'docs/guides/VOICE.md 提到「' + needle + '」');
+    }
   }
   const readme = read('README.md');
   ok(readme.includes('voice-gui.mjs') && readme.includes('voice-cli.mjs'), 'README 含两个语音工具的入口说明');
